@@ -1,0 +1,29 @@
+title = "a11yagent gitleaks config"
+
+# Keep every built-in rule; the rules below only add coverage.
+[extend]
+useDefault = true
+
+# The built-in generic-api-key rule only fires when a keyword such as "key" or
+# "token" sits next to the value. OpenAI-style and OpenRouter keys start with
+# "sk-", so we flag that prefix regardless of the surrounding variable name.
+[[rules]]
+id = "sk-prefixed-key"
+description = "OpenAI-style or OpenRouter secret key (sk-...)"
+regex = '''\bsk-[A-Za-z0-9_-]{16,}'''
+keywords = ["sk-"]
+
+# Groq API keys.
+[[rules]]
+id = "groq-api-key"
+description = "Groq API key (gsk_...)"
+regex = '''\bgsk_[A-Za-z0-9]{20,}'''
+keywords = ["gsk_"]
+
+# Supabase's newer secret API keys (the legacy service_role key is a JWT,
+# which the built-in jwt rule already covers).
+[[rules]]
+id = "supabase-secret-key"
+description = "Supabase secret API key (sb_secret_...)"
+regex = '''\bsb_secret_[A-Za-z0-9_-]{16,}'''
+keywords = ["sb_secret_"]

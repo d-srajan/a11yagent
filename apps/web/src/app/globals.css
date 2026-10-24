@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* shadcn/ui tokens. Foreground/background pairs meet WCAG AA 4.5:1:
+   an accessibility tool should pass its own audit. */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2 0 0);
+  --primary: oklch(0.42 0.17 265);
+  --primary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.6 0 0);
+  --ring: oklch(0.55 0.2 265);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.17 0 0);
+    --foreground: oklch(0.96 0 0);
+    --primary: oklch(0.78 0.12 265);
+    --primary-foreground: oklch(0.17 0 0);
+    --muted: oklch(0.25 0 0);
+    --muted-foreground: oklch(0.75 0 0);
+    --accent: oklch(0.27 0 0);
+    --accent-foreground: oklch(0.96 0 0);
+    --border: oklch(0.32 0 0);
+    --input: oklch(0.55 0 0);
+    --ring: oklch(0.75 0.15 265);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+}

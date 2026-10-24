@@ -1,0 +1,16 @@
+#!/bin/sh
+# Blocks any commit whose staged changes contain something that looks like a secret.
+# Enable once per clone with: pnpm hooks:install  (sets core.hooksPath to .githooks)
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed. Install it (brew install gitleaks) and retry." >&2
+  exit 1
+fi
+
+gitleaks git --pre-commit --staged --redact --no-banner --verbose
+status=$?
+if [ $status -ne 0 ]; then
+  echo "pre-commit: gitleaks found a possible secret. Remove it from the staged changes." >&2
+  echo "If a real key was ever committed or pushed, rotate it first." >&2
+fi
+exit $status

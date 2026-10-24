@@ -1,0 +1,13 @@
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    env_file: apps/worker/.env
+    environment:
+      # Local runs log every poll; production keeps the default "info".
+      LOG_LEVEL: debug
+    ports:
+      # Bound to localhost only: /healthz is for you, not the internet.
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped

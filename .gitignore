@@ -1,0 +1,20 @@
+# Secrets: every .env file is ignored except the committed placeholders
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+coverage/
+
+# Tooling
+.vercel/
+.turbo/
+.DS_Store
+*.log
