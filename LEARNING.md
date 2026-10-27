@@ -65,3 +65,36 @@
    Press Tab repeatedly and record the focused element each time. If 10 consecutive presses land on 3 or fewer elements, focus never escaped to the browser, and the page's last tabbable element was never reached, focus is trapped. Presses inside iframes don't count, because the frame's inner focus is invisible from outside.
 3. **Why score severity with a formula instead of asking an LLM to rank issues?**
    Ranking is the product's promise ("fix these five first"), so it must be stable between runs, explainable, unit-testable and free. `impact × (1 + ln(occurrences)) × startPage × blocker` gives all four. The log term means 50 copies of a header bug outrank one copy without drowning out a single critical trap.
+
+## Phase 2: Eval harness
+
+### In my own words
+
+<!--
+- Evals are a way to evaluate system performance based on change of Model, prompt, etc. 
+- Set a ground truth, and compare how change in model/prompt changes the output.
+-->
+
+### Concepts used
+
+- **Evals before the LLM.** A fixed ground-truth set (27 planted issues and one clean control page) turns "the scanner seems good" into a number that every later change has to keep. Building it now, while the pipeline is deterministic, gives a clean baseline. When Phase 3 adds a model, any drop in the number is the model's doing.
+- **Recall and false positives, together.** Recall alone rewards reporting everything; false positives alone reward reporting nothing. The control page pins the second number at zero, and the same evidence kinds count on both sides, so loosening a check can't buy recall for free.
+- **Ablation proves the eval has teeth.** Turning off one component (the keyboard walk) and watching recall fall by exactly the 5 issues only it catches shows the metric is wired to real behavior. An eval that stays at 100% whatever you break measures nothing.
+- **Match on meaning, not strings.** The matcher asks the browser which element each selector selects. Ground truth stays readable (`button.cart`), and renaming a selector in the scanner is not a regression.
+- **The eval checks itself.** A ground-truth selector that selects nothing fails the run, so a typo in the answer key can't pass as a scanner miss.
+
+### Trade-offs made
+
+- Counting alt candidates and axe "needs review" toward recall (D18): the target is reachable in this phase, and finding-only recall (85.2%) is printed next to it so the gap isn't hidden. This has to be tightened in Phase 3.
+- DOM resolution instead of string matching: one extra page load per page and a Playwright dependency in the eval, in exchange for matches that don't break on harmless selector changes.
+- Greedy one-to-one matching instead of optimal assignment: simpler, and correct here because planted issues with the same page and rule sit on different elements.
+- Committed results files: easy history and diffs now. At 10x the runs, move them to CI artifacts. A run costs nothing (about 20 s of local Chromium, no LLM).
+
+### Interview questions
+
+1. **Why build an eval before adding the LLM?**
+   So every later change is measured against a fixed baseline instead of eyeballed. With a deterministic scanner, the baseline is stable (27/27, 0 FP). When the LLM arrives, any change in the numbers can be pinned on it, and prompt or model swaps become experiments with a score instead of opinions.
+2. **Your recall is 100%. How do you know the eval isn't broken?**
+   Ablation: disable a component and the metric must drop by what that component alone catches. Turning off the keyboard walk took recall to 22/27, missing exactly the five focus, unreachable and trap issues. The unit tests also check the matcher's edge cases: wrong rule, wrong page, ancestor-only matches, double counting, and broken ground-truth selectors.
+3. **Why track false positives on a clean page instead of precision across the whole site?**
+   Precision needs a complete list of every real issue on every page, and real pages contain issues nobody planted, so "unmatched" doesn't mean "wrong". A page built to be clean has a known answer of zero, so any finding there is a guaranteed false positive. We still print unmatched findings on planted pages as an info signal.

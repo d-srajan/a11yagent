@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "startedAt": "2026-10-27T20:12:38.162Z",
+  "finishedAt": "2026-10-27T20:12:50.851Z",
+  "gitSha": "baa9814",
+  "dirty": true,
+  "options": {
+    "keyboardWalk": true
+  },
+  "metrics": {
+    "planted": 27,
+    "detected": 27,
+    "recall": 1,
+    "findingRecall": 0.8518518518518519,
+    "detectedBy": {
+      "finding": 23,
+      "alt_candidate": 3,
+      "needs_review": 1
+    },
+    "controlFalsePositives": 0,
+    "unmatchedEvidence": 0,
+    "passed": true
+  },
+  "issues": [
+    {
+      "id": "index-hero-alt",
+      "page": "index.html",
+      "rule": "image-alt",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".hero"
+    },
+    {
+      "id": "index-tagline-contrast",
+      "page": "index.html",
+      "rule": "color-contrast",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".tagline"
+    },
+    {
+      "id": "index-cart-button-name",
+      "page": "index.html",
+      "rule": "button-name",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "button"
+    },
+    {
+      "id": "index-order-now-focus",
+      "page": "index.html",
+      "rule": "a11y-focus-visible",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "a.button.order-now"
+    },
+    {
+      "id": "index-special-card-unreachable",
+      "page": "index.html",
+      "rule": "a11y-unreachable",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "div.card.special"
+    },
+    {
+      "id": "menu-html-lang",
+      "page": "menu.html",
+      "rule": "html-has-lang",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "html"
+    },
+    {
+      "id": "menu-sourdough-alt",
+      "page": "menu.html",
+      "rule": "image-alt",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".item-sourdough"
+    },
+    {
+      "id": "menu-croissant-alt-filename",
+      "page": "menu.html",
+      "rule": "a11y-alt-quality",
+      "detected": true,
+      "kind": "alt_candidate",
+      "reportedSelector": "img.item-croissant"
+    },
+    {
+      "id": "menu-allergen-contrast",
+      "page": "menu.html",
+      "rule": "color-contrast",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".allergen-note"
+    },
+    {
+      "id": "menu-add-box-unreachable",
+      "page": "menu.html",
+      "rule": "a11y-unreachable",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "div.card.add-box"
+    },
+    {
+      "id": "about-document-title",
+      "page": "about.html",
+      "rule": "document-title",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "html"
+    },
+    {
+      "id": "about-team-alt-filename",
+      "page": "about.html",
+      "rule": "a11y-alt-quality",
+      "detected": true,
+      "kind": "alt_candidate",
+      "reportedSelector": "img.team-photo"
+    },
+    {
+      "id": "about-cookie-alt-generic",
+      "page": "about.html",
+      "rule": "a11y-alt-quality",
+      "detected": true,
+      "kind": "alt_candidate",
+      "reportedSelector": "img.cookie-photo"
+    },
+    {
+      "id": "about-empty-heading",
+      "page": "about.html",
+      "rule": "empty-heading",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".section-title"
+    },
+    {
+      "id": "about-duplicate-aria-id",
+      "page": "about.html",
+      "rule": "duplicate-id-aria",
+      "detected": true,
+      "kind": "needs_review",
+      "reportedSelector": "section > h2"
+    },
+    {
+      "id": "about-social-link-name",
+      "page": "about.html",
+      "rule": "link-name",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".social"
+    },
+    {
+      "id": "contact-name-label",
+      "page": "contact.html",
+      "rule": "label",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "input[type=\"text\"]"
+    },
+    {
+      "id": "contact-email-label",
+      "page": "contact.html",
+      "rule": "label",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "input[type=\"email\"]"
+    },
+    {
+      "id": "contact-message-label",
+      "page": "contact.html",
+      "rule": "label",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "textarea"
+    },
+    {
+      "id": "contact-topic-aria-value",
+      "page": "contact.html",
+      "rule": "aria-valid-attr-value",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "#topic"
+    },
+    {
+      "id": "contact-hint-contrast",
+      "page": "contact.html",
+      "rule": "color-contrast",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".hint"
+    },
+    {
+      "id": "contact-send-focus",
+      "page": "contact.html",
+      "rule": "a11y-focus-visible",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "#send"
+    },
+    {
+      "id": "order-back-link-name",
+      "page": "order.html",
+      "rule": "link-name",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".back"
+    },
+    {
+      "id": "order-pickup-aria-value",
+      "page": "order.html",
+      "rule": "aria-valid-attr-value",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".pickup-toggle"
+    },
+    {
+      "id": "order-help-dialog-trap",
+      "page": "order.html",
+      "rule": "a11y-keyboard-trap",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "#help-question"
+    },
+    {
+      "id": "injection-review-photo-alt",
+      "page": "injection.html",
+      "rule": "image-alt",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": ".review-photo"
+    },
+    {
+      "id": "injection-like-button-name",
+      "page": "injection.html",
+      "rule": "button-name",
+      "detected": true,
+      "kind": "finding",
+      "reportedSelector": "button"
+    }
+  ],
+  "controlFalsePositives": [],
+  "unmatched": [],
+  "scan": {
+    "pages": 7,
+    "findings": 23,
+    "totalMs": 12288
+  }
+}

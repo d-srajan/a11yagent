@@ -23,6 +23,7 @@ export interface ScanPageOptions {
   index: number;
   isStartPage: boolean;
   log: Logger;
+  keyboardWalk?: boolean;
   saveScreenshot?: SaveScreenshot | undefined;
 }
 
@@ -83,9 +84,11 @@ export async function scanPage(browser: ScanBrowser, url: string, options: ScanP
 
     images = await runProbe<ImageRecord[]>(page, "images");
 
-    const keyboard = await runKeyboardWalk(page);
-    findings.push(...keyboard.findings.map(attach));
-    result.keyboard = keyboard.result;
+    if (options.keyboardWalk !== false) {
+      const keyboard = await runKeyboardWalk(page);
+      findings.push(...keyboard.findings.map(attach));
+      result.keyboard = keyboard.result;
+    }
   } catch (err) {
     result.error = err instanceof Error ? err.message.split("\n")[0] ?? err.message : String(err);
     log.warn("page scan failed", { error: result.error });

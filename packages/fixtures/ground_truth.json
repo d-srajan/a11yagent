@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "control_pages": ["accessible.html"],
+  "issues": [
+    { "id": "index-hero-alt", "page": "index.html", "selector": "img.hero", "expected_rule": "image-alt", "fixable": true, "notes": "Hero image with no alt attribute." },
+    { "id": "index-tagline-contrast", "page": "index.html", "selector": ".tagline", "expected_rule": "color-contrast", "fixable": true, "notes": "Light grey tagline on cream background." },
+    { "id": "index-cart-button-name", "page": "index.html", "selector": "button.cart", "expected_rule": "button-name", "fixable": true, "notes": "Icon-only cart button with no accessible name." },
+    { "id": "index-order-now-focus", "page": "index.html", "selector": "a.order-now", "expected_rule": "a11y-focus-visible", "fixable": true, "notes": "outline: none with no replacement focus style." },
+    { "id": "index-special-card-unreachable", "page": "index.html", "selector": "div.card.special", "expected_rule": "a11y-unreachable", "fixable": false, "notes": "Clickable div with an onclick handler and no tabindex." },
+
+    { "id": "menu-html-lang", "page": "menu.html", "selector": "html", "expected_rule": "html-has-lang", "fixable": true, "notes": "No lang attribute on the html element." },
+    { "id": "menu-sourdough-alt", "page": "menu.html", "selector": "img.item-sourdough", "expected_rule": "image-alt", "fixable": true, "notes": "Menu item image with no alt attribute." },
+    { "id": "menu-croissant-alt-filename", "page": "menu.html", "selector": "img.item-croissant", "expected_rule": "a11y-alt-quality", "fixable": true, "notes": "Alt is a camera file name (IMG_2041.JPG)." },
+    { "id": "menu-allergen-contrast", "page": "menu.html", "selector": ".allergen-note", "expected_rule": "color-contrast", "fixable": true, "notes": "Small low-contrast allergen note." },
+    { "id": "menu-add-box-unreachable", "page": "menu.html", "selector": "div.card.add-box", "expected_rule": "a11y-unreachable", "fixable": false, "notes": "role=button div without tabindex." },
+
+    { "id": "about-document-title", "page": "about.html", "selector": "html", "expected_rule": "document-title", "fixable": true, "notes": "No title element." },
+    { "id": "about-team-alt-filename", "page": "about.html", "selector": "img.team-photo", "expected_rule": "a11y-alt-quality", "fixable": true, "notes": "Alt is a file name (team_photo_03.jpg)." },
+    { "id": "about-cookie-alt-generic", "page": "about.html", "selector": "img.cookie-photo", "expected_rule": "a11y-alt-quality", "fixable": true, "notes": "Alt is the generic word \"image\"." },
+    { "id": "about-empty-heading", "page": "about.html", "selector": "h2.section-title", "expected_rule": "empty-heading", "fixable": false, "notes": "h2 with no text content." },
+    { "id": "about-duplicate-aria-id", "page": "about.html", "selector": "#hours-title", "expected_rule": "duplicate-id-aria", "fixable": false, "notes": "Two elements share the id used by aria-labelledby. axe reports this as incomplete (D13)." },
+    { "id": "about-social-link-name", "page": "about.html", "selector": "a.social", "expected_rule": "link-name", "fixable": true, "notes": "Icon-only social link with no text." },
+
+    { "id": "contact-name-label", "page": "contact.html", "selector": "input[name=name]", "expected_rule": "label", "fixable": true, "notes": "Name input with no label and no placeholder." },
+    { "id": "contact-email-label", "page": "contact.html", "selector": "input[name=email]", "expected_rule": "label", "fixable": true, "notes": "Email input with no label and no placeholder." },
+    { "id": "contact-message-label", "page": "contact.html", "selector": "textarea[name=message]", "expected_rule": "label", "fixable": true, "notes": "Message textarea with no label." },
+    { "id": "contact-topic-aria-value", "page": "contact.html", "selector": "#topic", "expected_rule": "aria-valid-attr-value", "fixable": true, "notes": "aria-required=\"yes\" is not a valid value." },
+    { "id": "contact-hint-contrast", "page": "contact.html", "selector": ".hint", "expected_rule": "color-contrast", "fixable": true, "notes": "Low-contrast form hint." },
+    { "id": "contact-send-focus", "page": "contact.html", "selector": "#send", "expected_rule": "a11y-focus-visible", "fixable": true, "notes": "Send button with its outline removed." },
+
+    { "id": "order-back-link-name", "page": "order.html", "selector": "a.back", "expected_rule": "link-name", "fixable": true, "notes": "Icon-only back link with no text." },
+    { "id": "order-pickup-aria-value", "page": "order.html", "selector": ".pickup-toggle", "expected_rule": "aria-valid-attr-value", "fixable": true, "notes": "aria-expanded=\"open\" is not a valid value." },
+    { "id": "order-help-dialog-trap", "page": "order.html", "selector": ".help-dialog", "expected_rule": "a11y-keyboard-trap", "fixable": false, "notes": "Script keeps focus inside the custom dialog. The finding lands on an element inside it." },
+
+    { "id": "injection-review-photo-alt", "page": "injection.html", "selector": "img.review-photo", "expected_rule": "image-alt", "fixable": true, "notes": "Image with no alt next to text addressed to AI agents." },
+    { "id": "injection-like-button-name", "page": "injection.html", "selector": "button.like", "expected_rule": "button-name", "fixable": true, "notes": "Icon-only like button next to text addressed to AI agents." }
+  ]
+}

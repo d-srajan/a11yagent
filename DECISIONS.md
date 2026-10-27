@@ -108,3 +108,29 @@ Non-obvious choices, newest last. Format: context, decision, alternatives, conse
 - **Context:** D7 planned the switch to the Playwright base image in Phase 1. In Phase 1, though, Chromium only runs through the CLI on your machine. The worker container doesn't run the pipeline until Phase 4.
 - **Decision:** Defer the base-image switch to Phase 4, when the worker actually launches Chromium.
 - **Consequences:** The current image installs the `playwright` package but no browser binaries. That's fine, because nothing in the container calls it yet.
+
+## D17. The matcher compares DOM elements, not selector strings (Phase 2)
+
+- **Context:** The spec matches a finding to a planted issue by "page, rule and selector". Ground truth is written by a person (`button.cart`, `img.hero`), but axe and the keyboard walk pick their own selectors (`button`, `.hero`, `a.button.order-now`). The keyboard trap is reported on `#help-question`, the input where focus gets stuck, which sits inside the planted `.help-dialog`.
+- **Decision:** The eval loads each fixture page once in the guarded scan browser and records which elements every selector selects (by document-order index, plus ancestors). A match means same page, same rule, and the reported element is the planted element or a descendant of it. Matching is one-to-one, prefers real findings over weaker evidence, and a ground-truth selector that selects nothing fails the run.
+- **Alternatives:** Exact string equality (all but a handful would miss). Copying the scanner's selectors into ground truth (the ground truth would then just restate the scanner's output, and any selector change would read as a regression). Fuzzy string matching (guesswork). Allowing ancestor matches too (a finding on `<html>` would match everything on the page).
+- **Consequences:** Ground truth stays readable and independent of the scanner. The matcher itself is a pure function with unit tests against a fake DOM. Selectors that cross iframes or shadow roots (`>>>`) don't resolve, so they can't match. The fixture has none, but a future fixture that uses them would need a resolver that understands them. Cost: one extra page load per fixture page (about 1 s per run).
+
+## D18. Recall counts alt candidates and axe "needs review" as detections, and reports finding-only recall alongside (Phase 2)
+
+- **Context:** Of the 27 planted issues, three (`a11y-alt-quality`) only become findings once the Phase 3 vision reviewer confirms them, and one (`duplicate-id-aria`) is reported by axe as *incomplete*, never as a violation (D13). Counting findings only gives 23/27 = 85.2%, below the 90% target, and no Phase 2 change could raise it.
+- **Decision:** Evidence comes in three kinds: `finding`, `alt_candidate` and `needs_review` (axe incomplete nodes, with their targets taken from `axeRaw`). Headline recall counts all three. The table also prints recall by kind, including finding-only recall. Every kind that counts toward recall also counts as a false positive on the control page, so loosening one check can't buy recall for free.
+- **Alternatives:** Findings only (fails the target until Phase 3, for reasons Phase 2 can't fix). Excluding the four from the denominator (hides them, and the number would jump when Phase 3 adds them back).
+- **Consequences:** Current run: 27/27 overall, 23 as findings. **Phase 3 must revisit this:** once the alt reviewer exists, an `a11y-alt-quality` issue should count only through a real `poor`/`should_be_decorative` finding. Otherwise a reviewer that rejects every candidate would still score 100% recall. The separate "alt verdict accuracy" metric is the other check on that.
+
+## D19. `scanSite({ keyboardWalk: false })` and `pnpm eval --no-keyboard` (Phase 2)
+
+- **Context:** Verify asks us to disable the keyboard walk temporarily and show that recall drops.
+- **Decision:** A `keyboardWalk` option on `scanSite`/`scanPage`, default `true`, exposed only through `pnpm eval --no-keyboard`. The CLI and worker don't expose it.
+- **Alternatives:** Editing the code by hand to comment out the walk, then reverting (easy to forget to revert, and you can't repeat it cheaply).
+- **Consequences:** The ablation can be rerun anytime, and its results file records `options.keyboardWalk: false`. Measured: recall goes from 27/27 to 22/27, losing exactly the 5 keyboard-only planted issues.
+
+## D20. Eval run history is committed; each record carries git sha and a dirty flag (Phase 2)
+
+- **Decision:** `packages/evals/results/<ISO timestamp>.json` holds metrics, per-issue outcomes, false positives and unmatched evidence, but not the full scan report (`axeRaw` alone is hundreds of KB). `dirty: true` marks runs from uncommitted code, which can't be reproduced from the sha.
+- **Consequences:** About 10 KB per run, so it's fine to commit. At 10x the runs (for example on every CI push), stop committing results and upload them as CI artifacts instead. The eval itself costs nothing to run: no LLM yet, about 20 s of local Chromium.

@@ -19,6 +19,8 @@ export interface ScanSiteOptions {
   userAgent?: string;
   log?: Logger;
   saveScreenshot?: SaveScreenshot;
+  // Off only for eval ablations: proves the eval notices a missing check.
+  keyboardWalk?: boolean;
   onProgress?: (progress: { pagesFound: number; pagesScanned: number }) => void;
 }
 
@@ -38,10 +40,11 @@ export async function scanSite(startUrl: string, options: ScanSiteOptions = {}):
   const { url } = await checkUrl(startUrl, { allowLocal });
   url.hash = "";
   const fetchOptions = { userAgent, allowLocal };
+  const keyboardWalk = options.keyboardWalk ?? true;
 
   const browser = await openScanBrowser({ allowLocal, userAgent, log });
   try {
-    const first = await scanPage(browser, url.href, { index: 0, isStartPage: true, log, saveScreenshot: options.saveScreenshot });
+    const first = await scanPage(browser, url.href, { index: 0, isStartPage: true, log, keyboardWalk, saveScreenshot: options.saveScreenshot });
     if (first.page.error && first.page.httpStatus === null) {
       throw new Error(`Could not load ${url.href}: ${first.page.error}`);
     }
@@ -62,7 +65,7 @@ export async function scanSite(startUrl: string, options: ScanSiteOptions = {}):
     const scans = [first];
     for (const [i, pageUrl] of pick.pages.slice(1).entries()) {
       await sleep(PAGE_DELAY_MS); // be polite to small sites
-      scans.push(await scanPage(browser, pageUrl, { index: i + 1, isStartPage: false, log, saveScreenshot: options.saveScreenshot }));
+      scans.push(await scanPage(browser, pageUrl, { index: i + 1, isStartPage: false, log, keyboardWalk, saveScreenshot: options.saveScreenshot }));
       options.onProgress?.({ pagesFound: pick.pages.length, pagesScanned: scans.length });
     }
 

@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 export const SITE_DIR = fileURLToPath(new URL("../site/", import.meta.url));
 export const DEFAULT_PORT = 4173;
+// Machine-readable list of planted issues, read by the eval runner.
+export const GROUND_TRUTH_PATH = fileURLToPath(new URL("../ground_truth.json", import.meta.url));
 
 const CONTENT_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",

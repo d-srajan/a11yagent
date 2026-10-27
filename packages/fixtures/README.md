@@ -11,7 +11,7 @@ The server binds to `127.0.0.1` only. `startFixtureServer(port)` is exported so 
 
 ## Planted issues (27)
 
-The machine-readable version (`ground_truth.json`) is Phase 2 work. This table is the human-readable source for it.
+`ground_truth.json` is the machine-readable version of this table. `pnpm eval` grades scans against it (see `packages/evals`). If you change a planted issue, update both.
 
 | Page | Issue | Element | Expected rule |
 | --- | --- | --- | --- |
