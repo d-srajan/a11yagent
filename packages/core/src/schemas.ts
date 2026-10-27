@@ -47,3 +47,5 @@ export const ScanRow = z.object({
   finished_at: z.string().nullable(),
 });
 export type ScanRow = z.infer<typeof ScanRow>;
+
+export * from "./report-schema.js";

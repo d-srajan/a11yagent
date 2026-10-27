@@ -7,6 +7,14 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./net": {
+      "types": "./src/net/index.ts",
+      "default": "./dist/net/index.js"
+    },
+    "./scanner": {
+      "types": "./src/scanner/index.ts",
+      "default": "./dist/scanner/index.js"
     }
   },
   "scripts": {
@@ -14,6 +22,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "playwright": "1.64.1",
     "zod": "4.6.7"
   },
   "devDependencies": {

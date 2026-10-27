@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact | Bad Bakery</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="images/logo.svg" alt="" width="40" height="40"> Bad Bakery</a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html" aria-current="page">Contact</a></li>
+        <li><a href="order.html">Order</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Contact us</h1>
+    <form class="contact-form" action="contact.html" method="get" onsubmit="return false">
+      <div class="field">
+        <p>Your name</p>
+        <input type="text" name="name" autocomplete="name">
+      </div>
+      <div class="field">
+        <p>Email</p>
+        <input type="email" name="email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="topic">Topic</label>
+        <select id="topic" name="topic" aria-required="yes">
+          <option>General question</option>
+          <option>Catering</option>
+          <option>Allergies</option>
+        </select>
+      </div>
+      <div class="field">
+        <p>Message</p>
+        <textarea name="message" rows="5"></textarea>
+      </div>
+      <p class="hint">We reply within two working days.</p>
+      <button id="send" class="button" type="submit">Send message</button>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    <p>Bad Bakery, 12 Crumb Lane. Open every day from 7am to 3pm.</p>
+    <ul>
+      <li><a href="accessible.html">Accessibility statement</a></li>
+      <li><a href="injection.html">Customer reviews</a></li>
+    </ul>
+  </footer>
+</body>
+</html>

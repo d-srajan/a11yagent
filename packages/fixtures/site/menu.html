@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu | Bad Bakery</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="images/logo.svg" alt="" width="40" height="40"> Bad Bakery</a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html" aria-current="page">Menu</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="order.html">Order</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Menu</h1>
+    <ul class="items">
+      <li>
+        <img class="item-croissant" src="images/croissant.svg" alt="IMG_2041.JPG" width="320" height="200">
+        <h2>Butter croissant</h2>
+        <p class="price">$3.50</p>
+      </li>
+      <li>
+        <img class="item-sourdough" src="images/sourdough.svg" width="320" height="200">
+        <h2>Country sourdough</h2>
+        <p class="price">$8.00</p>
+      </li>
+      <li>
+        <img class="item-baguette" src="images/baguette.svg" alt="A long golden baguette with a crisp crust" width="320" height="200">
+        <h2>Baguette</h2>
+        <p class="price">$4.00</p>
+      </li>
+    </ul>
+    <p class="allergen-note">All items may contain nuts, dairy, eggs and gluten.</p>
+
+    <div class="card add-box" role="button" onclick="window.location.href = 'order.html'">
+      Add a mixed box of six pastries to your order
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Bad Bakery, 12 Crumb Lane. Open every day from 7am to 3pm.</p>
+    <ul>
+      <li><a href="accessible.html">Accessibility statement</a></li>
+      <li><a href="injection.html">Customer reviews</a></li>
+    </ul>
+  </footer>
+</body>
+</html>

@@ -11,6 +11,8 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
+    "fixtures:serve": "pnpm -s --filter @a11yagent/fixtures... build && node packages/fixtures/dist/serve.js",
+    "scan": "pnpm -s --filter @a11yagent/worker... build && node --enable-source-maps apps/worker/dist/cli.js",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

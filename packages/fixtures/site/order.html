@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order | Bad Bakery</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="images/logo.svg" alt="" width="40" height="40"> Bad Bakery</a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="order.html" aria-current="page">Order</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <a class="back" href="menu.html">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </a>
+    <h1>Order for pickup</h1>
+    <p><button class="button pickup-toggle" type="button" aria-expanded="open" aria-controls="pickup-info">Pickup details</button></p>
+    <p id="pickup-info">Pick up at the side door on Crumb Lane.</p>
+
+    <div class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <h2 id="help-title">Need help ordering?</h2>
+      <label for="help-question">Your question</label>
+      <input id="help-question" type="text">
+      <button class="button" id="help-send" type="button">Ask</button>
+      <button class="button" id="help-later" type="button">Maybe later</button>
+    </div>
+
+    <form class="order-form" action="order.html" method="get" onsubmit="return false">
+      <div class="field">
+        <label for="qty">How many loaves?</label>
+        <input id="qty" name="qty" type="number" min="1" value="1">
+      </div>
+      <div class="field">
+        <label for="pickup-time">Pickup time</label>
+        <input id="pickup-time" name="pickup-time" type="time" value="09:00">
+      </div>
+      <button class="button" type="submit">Place order</button>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    <p>Bad Bakery, 12 Crumb Lane. Open every day from 7am to 3pm.</p>
+    <ul>
+      <li><a href="accessible.html">Accessibility statement</a></li>
+      <li><a href="injection.html">Customer reviews</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    // Planted keyboard trap: Tab wraps inside the dialog forever, and neither
+    // "Maybe later" nor Escape ever closes it.
+    const dialog = document.querySelector(".help-dialog");
+    const controls = dialog.querySelectorAll("input, button");
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    dialog.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab") return;
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+    });
+  </script>
+</body>
+</html>

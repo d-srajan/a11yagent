@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accessibility statement | Bad Bakery</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Control page: everything here is correct. It must produce zero findings. -->
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="images/logo.svg" alt="" width="40" height="40"> Bad Bakery</a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="order.html">Order</a></li>
+      </ul>
+    </nav>
+    <button class="icon-button" type="button" aria-label="View your basket">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24"><path d="M3 4h2l2 11h11l2-8H6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <h1>Accessibility statement</h1>
+    <p>We want everyone to be able to order from Bad Bakery, whatever device or assistive technology they use.</p>
+    <img src="images/sourdough.svg" alt="A round loaf of sourdough with a single score across the top" width="320" height="200">
+
+    <h2>Tell us about a problem</h2>
+    <form action="accessible.html" method="get" onsubmit="return false">
+      <div class="field">
+        <label for="problem">What went wrong?</label>
+        <textarea id="problem" name="problem" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label for="reply-email">Your email (optional)</label>
+        <input id="reply-email" name="reply-email" type="email" autocomplete="email">
+      </div>
+      <button class="button" type="submit">Send feedback</button>
+    </form>
+
+    <h2>Other ways to reach us</h2>
+    <p>Call us on <a href="tel:+15550100">555-0100</a> or visit the shop on Crumb Lane.</p>
+  </main>
+
+  <footer class="site-footer">
+    <p>Bad Bakery, 12 Crumb Lane. Open every day from 7am to 3pm.</p>
+    <ul>
+      <li><a href="accessible.html">Accessibility statement</a></li>
+      <li><a href="injection.html">Customer reviews</a></li>
+    </ul>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,35 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 17px/1.6 Georgia, "Times New Roman", serif; color: #1f1a17; background: #fffaf3; }
+a { color: #6b3410; }
+img { max-width: 100%; height: auto; }
+
+.site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1.5rem; background: #ffffff; border-bottom: 2px solid #e9d8c4; }
+.brand { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: bold; font-size: 1.25rem; text-decoration: none; }
+.site-header ul, .site-footer ul { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; list-style: none; margin: 0; padding: 0; }
+.site-header nav a { display: inline-block; padding: 0.25rem 0.25rem; }
+
+main { max-width: 52rem; margin: 0 auto; padding: 1.5rem; }
+.site-footer { margin-top: 3rem; padding: 1.5rem; background: #3b2314; color: #fff7ee; }
+.site-footer a { color: #ffe7c7; display: inline-block; padding: 0.25rem 0; }
+
+.button { display: inline-block; padding: 0.6rem 1.1rem; background: #6b3410; color: #ffffff; border: 0; border-radius: 4px; font: inherit; text-decoration: none; cursor: pointer; }
+.icon-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #6b3410; border-radius: 50%; background: #ffffff; color: #6b3410; cursor: pointer; }
+
+.card { padding: 1rem 1.25rem; border: 1px solid #e9d8c4; border-radius: 8px; background: #ffffff; cursor: pointer; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; list-style: none; padding: 0; }
+.items li { padding: 0.75rem; background: #ffffff; border: 1px solid #e9d8c4; border-radius: 8px; }
+.price { font-weight: bold; }
+
+form .field { margin-bottom: 1rem; }
+form .field label, form .field p { display: block; margin: 0 0 0.25rem; font-weight: bold; }
+input, select, textarea { font: inherit; padding: 0.4rem; border: 1px solid #6e5a4a; border-radius: 4px; background: #ffffff; color: #1f1a17; width: 100%; max-width: 24rem; }
+
+/* Planted: low-contrast text (#b3aba3 on #fffaf3 is about 2.1:1). */
+.tagline, .allergen-note, .hint { color: #b3aba3; }
+
+/* Planted: focus indicator removed. */
+.order-now:focus, #send:focus { outline: none; }
+
+.help-dialog { position: fixed; right: 1rem; bottom: 1rem; width: 18rem; padding: 1rem; background: #ffffff; border: 2px solid #6b3410; border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); }
+.help-dialog h2 { margin-top: 0; font-size: 1.1rem; }
+.help-dialog input { margin-bottom: 0.5rem; }

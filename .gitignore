@@ -13,6 +13,10 @@ build/
 next-env.d.ts
 coverage/
 
+# Scan output from `pnpm scan` (default --out report.json)
+report.json
+*-screenshots/
+
 # Tooling
 .vercel/
 .turbo/
