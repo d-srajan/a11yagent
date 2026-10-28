@@ -1,0 +1,38 @@
+# Publishes the Bad Bakery fixture (packages/fixtures/site) to GitHub Pages so
+# the production worker has a public site with known, planted issues to scan.
+# One-time setup: repo Settings -> Pages -> Source: "GitHub Actions".
+# Result: https://<owner>.github.io/<repo>/ (the fixture uses relative links,
+# so it works under the /<repo>/ sub-path).
+name: Deploy Bad Bakery to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["packages/fixtures/site/**", ".github/workflows/bad-bakery-pages.yml"]
+  workflow_dispatch:
+
+# Least privilege: read the repo, write only to Pages. No secrets are used,
+# and the workflow never runs on pull requests.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/fixtures/site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -10,4 +10,9 @@ services:
     ports:
       # Bound to localhost only: /healthz is for you, not the internet.
       - "127.0.0.1:8080:8080"
+    # Chromium needs more shared memory than Docker's 64 MB default (shm_size
+    # rather than ipc: host, which would share the host's IPC namespace with
+    # a browser loading strangers' pages). init reaps Chromium's zombie helpers.
+    init: true
+    shm_size: "1gb"
     restart: unless-stopped

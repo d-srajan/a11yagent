@@ -191,3 +191,36 @@ Non-obvious choices, newest last. Format: context, decision, alternatives, conse
 - **Decision:** Optional per-provider `<PROVIDER>_DISABLE_REASONING`. When true, the client adds OpenRouter's `reasoning: { enabled: false }` to that provider's requests. Set to true for OpenRouter in the local `.env`; `LLM_TIMEOUT_MS` stays at the spec's 20 s.
 - **Alternatives:** A 90 s timeout (slow, unpredictable, about 3x the output tokens per scan); splitting the explainer into smaller calls (more calls against the 25-call budget); a different free model (the JSON-and-vision ones were rate-limited or less accurate).
 - **Consequences:** Answers lose whatever the hidden reasoning added; the first explanations read fine, but this is what the "no invented facts" check should watch. The field is OpenRouter's format; another provider that rejected unknown fields would need its own variant, which is why it is off by default. At 10x traffic it saves roughly two-thirds of output tokens per scan on this model.
+
+## D30. API check order: cache before the rate limit (Phase 4)
+
+- **Context:** The spec lists "validation, SSRF pre-check, rate limit, cache, kill switch" for `POST /api/scans` without fixing the order. Verify item 4 wants a repeat URL to return the cached report "instantly".
+- **Decision:** Kill switch → body + Turnstile → URL + SSRF guard → 24-hour cache → per-IP limit → insert. A cache hit inserts nothing, so it doesn't use up the IP's quota and still works for someone who hit the limit. The cache matches any non-failed scan of the same `normalized_url`, including one still running, so two people submitting the same site share one scan.
+- **Alternatives:** Rate limit first (a cache hit would cost quota for zero work); SSRF before Turnstile (bots would get free DNS lookups).
+- **Consequences:** The limit counts rows, so two simultaneous requests from one IP can both pass at count 4. That's acceptable on a 5/day limit; a unique-per-day constraint or an RPC with a lock would close it. The window is a rolling 24 hours, not a calendar day. **At 10x traffic:** both checks are single indexed count queries (`(requester_ip_hash, created_at)` and `(normalized_url, created_at)`), well within the Supabase free tier.
+
+## D31. A graceful shutdown hands the in-flight scan back to the queue (Phase 4)
+
+- **Context:** `docker stop` sends SIGTERM and kills after 10 s. The Phase 0 shutdown waited for the in-flight scan (minutes), so a restart always ended in SIGKILL and the scan sat until the 10-minute stale timeout in `claim_next_scan()`.
+- **Decision:** On SIGTERM/SIGINT the worker releases the current scan: back to `queued` (keeping `attempts`) if it has an attempt left, otherwise `failed` with a "please submit it again" message. The update only touches rows still in an active status, so it can't undo a `done`. A retried attempt first deletes the previous attempt's pages, issues and steps, and screenshots are uploaded with `upsert`.
+- **Alternatives:** Waiting for the scan (SIGKILLed anyway); an AbortSignal through the scanner (cleaner, but touches every scanner function for little gain); relying only on the stale timeout (correct, but 10 minutes of "scanning" on screen).
+- **Consequences:** A planned restart costs one attempt, the same as a crash, matching the spec's "resumes, or fails cleanly after 2 attempts". A hard crash (`kill -9`, VM loss) still falls back to the 10-minute stale timeout. LLM calls from an interrupted attempt aren't in `agent_steps` (steps are written at the end), so the daily cap undercounts them slightly.
+
+## D32. Report data comes from the tables, not a stored JSON blob (Phase 4)
+
+- **Context:** The report needs things the six tables don't hold directly: per-page "needs human review" counts, axe help text and an example snippet per issue. The schema must not change without asking.
+- **Decision:** `pages.axe_raw` gets an `incompleteByRule` key next to the raw axe output, and the API selects only `axe_raw->incompleteByRule`. Help text, help URL and example HTML come from the issue's first finding (`findings.data.help/helpUrl`, `html_snippet`). Pages are stored with `created_at` 1 ms apart so they come back in crawl order.
+- **Alternatives:** A `report jsonb` column on `scans` (schema change, and duplicates every row); counting `axe_raw->incomplete` nodes (ships MBs of axe output per page view).
+- **Consequences:** The web app maps rows to a view model in one pure function (`buildReport`, unit-tested), and `GET /api/scans/:id` stays a few KB. PostgREST returns at most 1,000 findings per query by default; a site that big would show page finding counts that are too low (issues are unaffected).
+
+## D33. Screenshots: bucket created by the worker, signed URLs for 1 hour (Phase 4)
+
+- **Decision:** The worker creates the private `screenshots` bucket at startup if it's missing, uploads `<scanId>/<nn>-<slug>.jpg`, and the API signs each path for 1 hour. A failed upload logs a warning and the page simply has no thumbnail.
+- **Alternatives:** A migration inserting into `storage.buckets` (another manual SQL-editor step, D8); a public bucket (anyone could enumerate screenshots of other people's scans).
+- **Consequences:** No manual setup on a new project. A report left open for over an hour shows broken thumbnails until it's refreshed. **At 10x traffic:** about 5 JPEGs of 100 to 500 KB per scan; 1,000 scans a day with 30-day retention is roughly 15 to 75 GB, past the 1 GB free Storage tier. Thumbnails would need downscaling or a shorter retention before then.
+
+## D34. Bad Bakery is published with GitHub Pages; the worker image is Playwright's (Phase 4)
+
+- **Decision:** `.github/workflows/bad-bakery-pages.yml` publishes `packages/fixtures/site` on pushes to `main` that touch it (push trigger only, `contents: read` + `pages: write`, no secrets). The fixture already uses relative links, so it works under `/a11yagent/`. The worker runtime image is `mcr.microsoft.com/playwright:v1.64.1-noble` (same version as the `playwright` package, as D16 planned), running as `pwuser`, with `init: true` and `shm_size: 1gb` in compose rather than `ipc: host`.
+- **Alternatives:** Vercel/Netlify/Cloudflare Pages for the fixture (another account or project to manage); serving it from the Next.js app (production would then scan itself).
+- **Consequences:** The image is about 1.5 GB, versus about 250 MB before. A GCP e2-micro (1 GB RAM) is tight for Chromium plus Node; add swap, or expect to need a 2 GB VM.

@@ -13,6 +13,14 @@ export const WorkerEnv = z
       .string()
       .optional()
       .transform((value) => envBoolean(value, false)),
+    // Kill switch, shared with the web app: when false the worker stops
+    // claiming new scans (a scan already running finishes).
+    SCANS_ENABLED: z
+      .string()
+      .optional()
+      .transform((value) => envBoolean(value, true)),
+    // Used when a scan row has no options.maxPages. The scanner caps it at 10.
+    MAX_PAGES_PER_SCAN: z.coerce.number().int().min(1).max(10).default(5),
   })
   // The SSRF guard's one escape hatch must never be open in production: a
   // leftover dev setting would let strangers scan the worker's own machine.

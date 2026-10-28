@@ -1,4 +1,10 @@
 import { ScanForm } from "@/components/scan-form";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { scansEnabled, turnstileSiteKey } from "@/lib/server/env";
+
+// Read SCANS_ENABLED per request, so flipping the kill switch and restarting
+// takes effect without a rebuild.
+export const dynamic = "force-dynamic";
 
 const steps = [
   { title: "Scan", body: "axe-core and a keyboard walk check up to 10 pages of your site." },
@@ -9,9 +15,7 @@ const steps = [
 export default function HomePage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 sm:px-6">
-      <header className="py-6">
-        <p className="text-lg font-semibold">a11yagent</p>
-      </header>
+      <SiteHeader />
 
       <main id="main" className="flex-1 py-12">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
@@ -22,7 +26,7 @@ export default function HomePage() {
           real browser. Free, no account needed.
         </p>
 
-        <ScanForm />
+        <ScanForm enabled={scansEnabled()} siteKey={turnstileSiteKey()} />
 
         <section aria-labelledby="how-heading" className="mt-16">
           <h2 id="how-heading" className="text-2xl font-semibold">
@@ -41,13 +45,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t py-6 text-sm text-muted-foreground">
-        <p>Scan sites you own or manage.</p>
-        <p className="mt-1">
-          Automated testing catches only part of WCAG issues and cannot certify WCAG or ADA
-          compliance. A human review is still needed.
-        </p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

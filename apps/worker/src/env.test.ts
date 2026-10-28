@@ -13,4 +13,9 @@ describe("WorkerEnv", () => {
     expect(() => parseEnv(WorkerEnv, { ...base, NODE_ENV: "production", ALLOW_LOCAL_TARGETS: "true" })).toThrow(/ALLOW_LOCAL_TARGETS/);
     expect(parseEnv(WorkerEnv, { ...base, NODE_ENV: "production", ALLOW_LOCAL_TARGETS: "false" }).ALLOW_LOCAL_TARGETS).toBe(false);
   });
+
+  it("defaults the kill switch to on, and reads SCANS_ENABLED=false as off", () => {
+    expect(parseEnv(WorkerEnv, base).SCANS_ENABLED).toBe(true);
+    expect(parseEnv(WorkerEnv, { ...base, SCANS_ENABLED: "false" }).SCANS_ENABLED).toBe(false);
+  });
 });

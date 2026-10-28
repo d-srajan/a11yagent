@@ -7,6 +7,8 @@ pnpm fixtures:serve          # http://127.0.0.1:4173 (PORT=... to change)
 pnpm scan http://127.0.0.1:4173 --allow-local
 ```
 
+Public copy (Phase 4): `.github/workflows/bad-bakery-pages.yml` publishes `site/` to GitHub Pages at https://d-srajan.github.io/a11yagent/ on every push to `main` that touches it, so the production app has a safe public target. Enable it once under repo Settings → Pages → Source: GitHub Actions.
+
 The server binds to `127.0.0.1` only. `startFixtureServer(port)` is exported so the eval runner can serve the site in-process.
 
 ## Planted issues (27)

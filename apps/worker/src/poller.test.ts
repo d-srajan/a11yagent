@@ -28,6 +28,8 @@ function fakeQueue(next: ScanRow | null): ScanQueue {
     claimNext: vi.fn(async () => next),
     markDone: vi.fn(async () => {}),
     markFailed: vi.fn(async () => {}),
+    setStatus: vi.fn(async () => {}),
+    release: vi.fn(async () => "requeued" as const),
   };
 }
 

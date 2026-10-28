@@ -140,3 +140,33 @@
    Three hard stops, enforced in code: `maxSteps` on model calls, a per-scan budget (calls and output tokens) checked *before* every call, and a global daily cap counted from the trace table. `finish` arguments are validated, so a junk "I'm done" doesn't count as finishing. Budget exhaustion is a normal result status, and the report marks those parts "unavailable" instead of failing the scan.
 3. **Your primary LLM provider starts returning 429s mid-scan. Walk through what happens.**
    The 429 attempt is traced with its error and counts against the budget. The client moves to the next provider for that call and benches the rate-limited one for the rest of the scan, so later calls go straight to the fallback. If output fails validation, the same model gets one repair turn, then the next provider. If all fail, that part is marked unavailable. The trace shows exactly which provider answered each call.
+
+## Phase 4: Web app end to end
+
+### In my own words
+
+<!-- Three sentences, before ticking the checklist. -->
+
+### Concepts used
+
+- **Async jobs and progress UX.** The API inserts a `queued` row and returns its id in under a second. The worker writes `status` and `progress` as it moves through crawling, scanning and analyzing, and the page polls every 2 s with `setTimeout` chaining, so requests never stack. The user sees "3 of 5 pages checked" and their place in the queue instead of a spinner.
+- **Abuse control in layers.** Turnstile (is it a person?), the SSRF guard (is the target public?), a per-IP daily limit on a salted hash (how much can one person use?), a global LLM cap (how much can everyone use?) and a kill switch (stop everything without a deploy). Each one is checked in code; the tests pin down the order.
+- **Caching as a cost control.** The same `normalized_url` within 24 hours returns the existing scan id. A repeat costs one indexed query instead of a browser session and about 4 LLM calls, and it doesn't touch the user's quota.
+- **Leases and graceful shutdown.** `attempts` plus `claimed_at` form a lease. On SIGTERM the worker gives its scan back instead of waiting to be SIGKILLed, and a retry starts by deleting the previous attempt's partial rows.
+- **Showing the agent's work.** The timeline renders every `agent_steps` row (tool or model call, provider/model, latency, tokens, a one-line input and output, errors). Users can check that AI ran only where we say, and a fallback or failure is visible rather than hidden.
+
+### Trade-offs made
+
+- Polling instead of Supabase Realtime or Server-Sent Events: one GET every 2 s per open tab is trivial at this scale and needs no anon key in the browser (RLS has no policies). At 10x, a CDN-cacheable "done" response or Realtime would cut the load.
+- Agent steps are written once at the end of the scan, not live. That's simpler, with no FK ordering problems, but the timeline appears only with the finished report.
+- Rate limiting by counting rows: no Redis, but slightly racy under concurrent requests (D30).
+- The worker creates the screenshots bucket itself instead of a migration (D33).
+
+### Interview questions
+
+1. **Why doesn't the web API just run the scan and return the report?**
+   A scan takes 30 s to 3 min and needs Chromium. Serverless functions time out and run Chromium poorly, and a dropped connection would lose the work. A queue table decouples the two: the API answers in milliseconds, the worker can retry, and progress is just a row the browser polls.
+2. **How do you stop one person from burning your free LLM quota?**
+   Turnstile blocks scripts, a salted-IP-hash counter caps scans per IP per day, the cache makes repeats free, each scan has a per-scan LLM budget, and a global daily cap counted from `agent_steps` bounds the total. If all of that fails, `SCANS_ENABLED=false` stops new scans without a deploy.
+3. **A deploy restarts the worker mid-scan. What does the user see?**
+   The SIGTERM handler sets the scan back to `queued` (or `failed` if it was the second attempt). The new worker claims it within 2 s, deletes the partial rows and re-runs it. The user's page keeps polling and shows the stages again, then the report. Only a hard crash waits for the 10-minute stale lease.
