@@ -4,9 +4,11 @@ import { createLogger, envBoolean } from "@a11yagent/core";
 import { SsrfError } from "@a11yagent/core/net";
 import { scanSite } from "@a11yagent/core/scanner";
 import { parseCliArgs, usage } from "./cliArgs.js";
+import { loadWorkerEnvFile, runLlmStage } from "./cliLlm.js";
+import { formatLlmSummary } from "./cliLlmSummary.js";
 import { formatSummary } from "./cliSummary.js";
 
-// pnpm scan <url> [--allow-local] [--out report.json] [--max-pages n]
+// pnpm scan <url> [--allow-local] [--llm] [--out report.json] [--max-pages n]
 // Runs the exact pipeline the worker will run, minus the database.
 
 const out = (text: string): void => void process.stdout.write(text + "\n");
@@ -22,6 +24,7 @@ if (args.ok && args.help) {
   process.exit(0);
 }
 if (!args.ok || args.help) process.exit(64); // narrows the type; unreachable
+const envFile = args.llm ? loadWorkerEnvFile() : null;
 
 const allowLocal = args.allowLocal || envBoolean(process.env.ALLOW_LOCAL_TARGETS, false);
 if (allowLocal && process.env.NODE_ENV === "production") {
@@ -37,8 +40,10 @@ const log = createLogger({
 const outPath = path.resolve(args.out);
 const shotDir = outPath.replace(/\.json$/i, "") + "-screenshots";
 
+if (args.llm) log.info(envFile ? "loaded LLM settings" : "no apps/worker/.env found; using shell env only", { file: envFile });
+
 try {
-  const report = await scanSite(args.url, {
+  const scanned = await scanSite(args.url, {
     allowLocal,
     maxPages: args.maxPages,
     log,
@@ -50,8 +55,11 @@ try {
       return path.relative(path.dirname(outPath), file);
     },
   });
+  // The LLM stage never fails the scan: unavailable parts are marked as such.
+  const report = args.llm ? await runLlmStage(scanned, { allowLocal, log }) : scanned;
   await writeFile(outPath, JSON.stringify(report, null, 2) + "\n");
   out(formatSummary(report));
+  if (args.llm) out(formatLlmSummary(report));
   out(`\nReport written to ${outPath}`);
 } catch (err) {
   if (err instanceof SsrfError) {

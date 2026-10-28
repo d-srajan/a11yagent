@@ -22,3 +22,18 @@ export function envBoolean(value: string | undefined, fallback: boolean): boolea
   if (value === undefined || value === "") return fallback;
   return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
 }
+
+// Loads a .env file without overriding variables already set in the shell,
+// so `DAILY_LLM_CALL_CAP=0 pnpm scan ...` beats the file. Returns false when
+// the file doesn't exist.
+export function loadEnvFileUnderShell(file: string): boolean {
+  const shell = { ...process.env };
+  try {
+    process.loadEnvFile(file);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw err;
+  }
+  Object.assign(process.env, shell);
+  return true;
+}

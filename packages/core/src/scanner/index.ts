@@ -2,6 +2,7 @@
 export * from "./altCandidates.js";
 export * from "./axeCheck.js";
 export * from "./browser.js";
+export * from "./imageCapture.js";
 export * from "./keyboardAnalysis.js";
 export * from "./robots.js";
 export * from "./scanPage.js";

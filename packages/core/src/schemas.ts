@@ -48,4 +48,5 @@ export const ScanRow = z.object({
 });
 export type ScanRow = z.infer<typeof ScanRow>;
 
+export * from "./agent-schema.js";
 export * from "./report-schema.js";

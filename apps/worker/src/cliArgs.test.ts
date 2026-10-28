@@ -8,15 +8,17 @@ describe("parseCliArgs", () => {
       help: false,
       url: "https://example.com",
       allowLocal: false,
+      llm: false,
       out: "report.json",
       maxPages: CLI_DEFAULT_MAX_PAGES,
     });
   });
 
   it("parses every flag, and ignores a forwarded --", () => {
-    expect(parseCliArgs(["--", "http://127.0.0.1:4173", "--allow-local", "--out", "r.json", "--max-pages", "3"])).toMatchObject({
+    expect(parseCliArgs(["--", "http://127.0.0.1:4173", "--allow-local", "--llm", "--out", "r.json", "--max-pages", "3"])).toMatchObject({
       ok: true,
       allowLocal: true,
+      llm: true,
       out: "r.json",
       maxPages: 3,
     });

@@ -1,8 +1,9 @@
 import { parseArgs } from "node:util";
 
-export const usage = `Usage: pnpm scan <url> [--allow-local] [--out report.json] [--max-pages n]
+export const usage = `Usage: pnpm scan <url> [--allow-local] [--llm] [--out report.json] [--max-pages n]
 
   --allow-local   Allow http://127.0.0.1 on any port (fixtures and local dev only)
+  --llm           Run the LLM agents (alt-text review, explanations); reads apps/worker/.env
   --out <file>    Where to write the JSON report (default: report.json)
   --max-pages <n> Pages to scan, 1-10 (default: 10 for the CLI)`;
 
@@ -12,7 +13,7 @@ export const CLI_DEFAULT_MAX_PAGES = 10;
 
 export type CliArgs =
   | { ok: true; help: true }
-  | { ok: true; help: false; url: string; allowLocal: boolean; out: string; maxPages: number }
+  | { ok: true; help: false; url: string; allowLocal: boolean; llm: boolean; out: string; maxPages: number }
   | { ok: false; error: string };
 
 export function parseCliArgs(argv: string[]): CliArgs {
@@ -25,6 +26,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
       allowPositionals: true,
       options: {
         "allow-local": { type: "boolean", default: false },
+        llm: { type: "boolean", default: false },
         out: { type: "string", default: "report.json" },
         "max-pages": { type: "string" },
         help: { type: "boolean", short: "h", default: false },
@@ -42,5 +44,5 @@ export function parseCliArgs(argv: string[]): CliArgs {
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 10) {
     return { ok: false, error: "--max-pages must be a whole number from 1 to 10." };
   }
-  return { ok: true, help: false, url, allowLocal: values["allow-local"], out: values.out, maxPages };
+  return { ok: true, help: false, url, allowLocal: values["allow-local"], llm: values.llm, out: values.out, maxPages };
 }

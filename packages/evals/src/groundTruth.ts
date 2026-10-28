@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { AltVerdict } from "@a11yagent/core";
 import { z } from "zod";
 
 // Field names follow the spec's ground_truth.json format (snake_case), so the
@@ -14,12 +15,25 @@ export const GroundTruthEntry = z.object({
 });
 export type GroundTruthEntry = z.infer<typeof GroundTruthEntry>;
 
+// Planted alt texts with the verdicts a good reviewer may give. Includes
+// good alts, which the deterministic filter never nominates: the eval sends
+// those to the reviewer directly, to check it leaves good alt text alone.
+export const AltCase = z.object({
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  page: z.string().regex(/^[a-z0-9/-]+\.html$/),
+  selector: z.string().min(1),
+  accept: z.array(AltVerdict).min(1),
+  notes: z.string(),
+});
+export type AltCase = z.infer<typeof AltCase>;
+
 export const GroundTruth = z
   .object({
     version: z.literal(1),
     // Clean pages: anything reported there is a false positive.
     control_pages: z.array(z.string()).min(1),
     issues: z.array(GroundTruthEntry).min(1),
+    alt_cases: z.array(AltCase).default([]),
   })
   .superRefine((gt, ctx) => {
     const seen = new Set<string>();

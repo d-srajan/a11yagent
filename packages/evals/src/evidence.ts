@@ -35,7 +35,11 @@ const AxeIncomplete = z.object({
 const joinTarget = (target: unknown[]): string =>
   target.map((p) => (Array.isArray(p) ? p.join(" >>> ") : String(p))).join(" >>> ");
 
-export function collectEvidence(report: ScanReport): Evidence[] {
+// With the LLM on, an alt candidate is only a nomination: the reviewer's
+// poor/should_be_decorative verdict (a real finding) is what counts. Counting
+// candidates too would let a reviewer that rejects everything still score
+// full recall (DECISIONS.md D18, revisited in D27).
+export function collectEvidence(report: ScanReport, options: { altCandidates: boolean } = { altCandidates: true }): Evidence[] {
   const evidence: Evidence[] = report.findings.map((f) => ({
     kind: "finding",
     page: pageKey(f.pageUrl),
@@ -43,7 +47,7 @@ export function collectEvidence(report: ScanReport): Evidence[] {
     selector: f.selector,
     ref: f.id,
   }));
-  for (const c of report.altCandidates) {
+  for (const c of options.altCandidates ? report.altCandidates : []) {
     evidence.push({ kind: "alt_candidate", page: pageKey(c.pageUrl), ruleId: ALT_QUALITY_RULE, selector: c.selector, ref: `alt "${c.alt}"` });
   }
   for (const page of report.pages) {

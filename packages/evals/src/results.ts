@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ScanReport } from "@a11yagent/core";
+import type { AltAccuracy } from "./altAccuracy.js";
 import type { MatchResult } from "./match.js";
 import type { Metrics } from "./metrics.js";
 
@@ -26,12 +27,16 @@ export interface RunRecord {
   // Whether the working tree had uncommitted changes: a result from a dirty
   // tree can't be reproduced from gitSha alone.
   dirty: boolean;
-  options: { keyboardWalk: boolean };
+  options: { keyboardWalk: boolean; llm: boolean };
   metrics: Metrics;
   issues: { id: string; page: string; rule: string; detected: boolean; kind: string | null; reportedSelector: string | null }[];
   controlFalsePositives: { page: string; rule: string; selector: string; kind: string }[];
   unmatched: { page: string; rule: string; selector: string; kind: string }[];
   scan: { pages: number; findings: number; totalMs: number };
+  // With --llm: per-case verdicts, and which provider/model answered each
+  // call, so a change in accuracy can be traced to a model or prompt change.
+  altCases?: AltAccuracy["cases"];
+  llmSteps?: { agent: string; name: string; provider: string | null; model: string | null; promptVersion: string | null; error: string | null }[];
 }
 
 function isDirty(): boolean {
@@ -45,9 +50,11 @@ function isDirty(): boolean {
 export function buildRecord(args: {
   startedAt: string;
   keyboardWalk: boolean;
+  llm: boolean;
   metrics: Metrics;
   result: MatchResult;
   report: ScanReport;
+  alt: AltAccuracy | null;
 }): RunRecord {
   const brief = (ev: { page: string; ruleId: string; selector: string; kind: string }): RunRecord["unmatched"][number] => ({
     page: ev.page,
@@ -61,7 +68,7 @@ export function buildRecord(args: {
     finishedAt: new Date().toISOString(),
     gitSha: gitSha(),
     dirty: isDirty(),
-    options: { keyboardWalk: args.keyboardWalk },
+    options: { keyboardWalk: args.keyboardWalk, llm: args.llm },
     metrics: args.metrics,
     issues: args.result.entries.map(({ entry, evidence }) => ({
       id: entry.id,
@@ -74,6 +81,10 @@ export function buildRecord(args: {
     controlFalsePositives: args.result.control.map(brief),
     unmatched: args.result.unmatched.map(brief),
     scan: { pages: args.report.pages.length, findings: args.report.findings.length, totalMs: args.report.timings.totalMs },
+    ...(args.alt ? { altCases: args.alt.cases } : {}),
+    ...(args.report.llm
+      ? { llmSteps: args.report.llm.steps.filter((s) => s.kind === "llm").map((s) => ({ agent: s.agent, name: s.name, provider: s.provider, model: s.model, promptVersion: s.promptVersion, error: s.error })) }
+      : {}),
   };
 }
 

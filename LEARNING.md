@@ -98,3 +98,45 @@
    Ablation: disable a component and the metric must drop by what that component alone catches. Turning off the keyboard walk took recall to 22/27, missing exactly the five focus, unreachable and trap issues. The unit tests also check the matcher's edge cases: wrong rule, wrong page, ancestor-only matches, double counting, and broken ground-truth selectors.
 3. **Why track false positives on a clean page instead of precision across the whole site?**
    Precision needs a complete list of every real issue on every page, and real pages contain issues nobody planted, so "unmatched" doesn't mean "wrong". A page built to be clean has a known answer of zero, so any finding there is a guaranteed false positive. We still print unmatched findings on planted pages as an info signal.
+
+## Phase 3: LLM layer and first agents
+
+### In my own words
+
+<!-- 
+ - Simply put, agents are LLMs + Tools running in a loop
+ - Be care with checks during the loop, like 
+   - no of LLM calls, 
+   - budgeting
+   - tracing for debugging, monitoring
+   - no of tool calls, and appending tool output to the LLM message, 
+   - use specific agents for each tasks, 
+   - provide the context LLM needs and nothing else, 
+   - don't trust inputs from untrusted sources(duh!)
+ -->
+
+### Concepts used
+
+- **Tool calling.** The model never runs anything. It returns a tool name and JSON arguments; our code checks the tool exists, validates the arguments with zod, runs a fixed function, and sends the result (or the error) back as a `tool` message with the same `tool_call_id`.
+- **Structured output.** JSON mode plus a zod schema plus one repair turn. The model is shown the schema (generated from zod, so it can't drift), and anything that fails validation never reaches the report.
+- **The agent loop and stop conditions.** Call model → run tools → append results → repeat, stopping only on a valid `finish`, `maxSteps`, or an exhausted budget. Specified by 13 tests with a scripted mock model. The hand-write step was only partly by hand: I drafted `runAgent`, and after two review rounds Claude Code finished it at my request (one `handleCall` with early returns, so every tool call gets exactly one trace row and one reply). Retype it from memory before interviews.
+- **Provider fallback.** One OpenAI-compatible client, three providers in env order. Rate limits and bad keys bench a provider for the rest of the scan, and SDK retries are off so every attempt is counted.
+- **Budgets and tracing.** Every attempt reserves a call against the per-scan limits and the daily cap before it is sent, and every attempt and tool call becomes an `agent_steps`-shaped row. That trace is how you prove a fallback happened or why a part is "unavailable".
+- **Untrusted input.** Page text and HTML go inside `<untrusted_page_content>` tags that the page can't close, and every system prompt says the tags hold data, not instructions.
+
+### Trade-offs made
+
+- Single structured calls for the explainer and reviewer instead of agent loops: cheaper and predictable. The loop is saved for the fixer, where tools are needed.
+- JSON mode instead of strict `json_schema`: works on all three free providers, at the cost of an occasional repair call.
+- Images rendered in the guarded browser instead of an image library: no new dependency, the same SSRF path as page scans, and SVG support. It costs one extra browser launch.
+- Steps live in the report until Phase 4 writes scans to the DB, so the trace is complete but not yet queryable.
+- Failed attempts count against the budget, so a flaky provider can leave a scan with fewer explanations, but free-tier usage can never exceed the cap.
+
+### Interview questions
+
+1. **Your agent's tool throws an exception. What happens?**
+   The loop catches it and returns `Error: <message>` as that tool call's result. The model sees it and can retry with different arguments or give up through `finish`. Throwing would kill the run over something the model could have recovered from. A timeout gets the same treatment.
+2. **How do you stop an agent from running forever or overspending?**
+   Three hard stops, enforced in code: `maxSteps` on model calls, a per-scan budget (calls and output tokens) checked *before* every call, and a global daily cap counted from the trace table. `finish` arguments are validated, so a junk "I'm done" doesn't count as finishing. Budget exhaustion is a normal result status, and the report marks those parts "unavailable" instead of failing the scan.
+3. **Your primary LLM provider starts returning 429s mid-scan. Walk through what happens.**
+   The 429 attempt is traced with its error and counts against the budget. The client moves to the next provider for that call and benches the rate-limited one for the rest of the scan, so later calls go straight to the fallback. If output fails validation, the same model gets one repair turn, then the next provider. If all fail, that part is marked unavailable. The trace shows exactly which provider answered each call.

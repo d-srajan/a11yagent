@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AltReview, IssueExplanation, LlmSummary } from "./agent-schema.js";
 
 // The ScanReport is the single output of the scanner. The CLI writes it as
 // JSON, the worker maps it onto the pages/findings/issues tables, and the
@@ -44,6 +45,8 @@ export const Issue = z.object({
   helpUrl: z.string().nullable(),
   exampleSelector: z.string(),
   exampleHtml: z.string().nullable(),
+  // Filled by the explainer agent with --llm; null when unavailable.
+  explanation: IssueExplanation.nullable().optional(),
 });
 export type Issue = z.infer<typeof Issue>;
 
@@ -87,6 +90,11 @@ export const PageResult = z.object({
   keyboard: KeyboardResult.nullable(),
   axeRaw: z.unknown().nullable(),
   error: z.string().nullable(),
+  // Every <img> the probe saw. The alt reviewer only gets candidates; the
+  // eval also uses these to check verdicts on good alt text.
+  images: z
+    .array(z.object({ selector: z.string(), src: z.string(), alt: z.string(), surroundingText: z.string(), inLink: z.boolean() }))
+    .optional(),
   durationMs: z.number().int().nonnegative(),
 });
 export type PageResult = z.infer<typeof PageResult>;
@@ -104,6 +112,8 @@ export const AltCandidate = z.object({
   surroundingText: z.string(),
   inLink: z.boolean(),
   occurrences: z.number().int().positive(),
+  // The vision reviewer's verdict with --llm; absent when not reviewed.
+  review: AltReview.nullable().optional(),
 });
 export type AltCandidate = z.infer<typeof AltCandidate>;
 
@@ -132,5 +142,7 @@ export const ScanReport = z.object({
     needsReview: z.number().int(),
   }),
   timings: z.object({ totalMs: z.number().int(), discoveryMs: z.number().int() }),
+  // Present only when the scan ran with the LLM layer.
+  llm: LlmSummary.optional(),
 });
 export type ScanReport = z.infer<typeof ScanReport>;

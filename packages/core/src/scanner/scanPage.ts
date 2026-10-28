@@ -97,6 +97,7 @@ export async function scanPage(browser: ScanBrowser, url: string, options: ScanP
   }
 
   result.findingCount = findings.length;
+  result.images = images;
   result.durationMs = Date.now() - started;
   log.info("page scanned", { findings: findings.length, ms: result.durationMs, error: result.error });
   return { page: result, findings, images, links };

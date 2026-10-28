@@ -134,3 +134,60 @@ Non-obvious choices, newest last. Format: context, decision, alternatives, conse
 
 - **Decision:** `packages/evals/results/<ISO timestamp>.json` holds metrics, per-issue outcomes, false positives and unmatched evidence, but not the full scan report (`axeRaw` alone is hundreds of KB). `dirty: true` marks runs from uncommitted code, which can't be reproduced from the sha.
 - **Consequences:** About 10 KB per run, so it's fine to commit. At 10x the runs (for example on every CI push), stop committing results and upload them as CI artifacts instead. The eval itself costs nothing to run: no LLM yet, about 20 s of local Chromium.
+
+## D21. Every provider error falls back; rate limits and bad keys bench the provider for the scan (Phase 3)
+
+- **Context:** The spec falls back on 429, 5xx, a 20 s timeout or invalid output. The Verify list also needs "invalid Gemini key → fallback provider", and Gemini answers a bad key with `400 API_KEY_INVALID`, not 401.
+- **Decision:** Any `ProviderError` moves on to the next provider. 401, 403, 404 (wrong model id), 429 and a 400 that mentions the API key also *disable* that provider for the rest of the scan. Timeouts and 5xx don't. The `openai` SDK runs with `maxRetries: 0`, so every attempt is ours, counted against the budget and traced. Failed attempts count as calls.
+- **Alternatives:** Fall back only on the spec's list (a bad key would fail the scan). Retry the same provider with backoff (burns free-tier quota and the time budget).
+- **Consequences:** A dead Gemini key costs 1 wasted call per scan instead of up to 9. A 400 caused by our own request also tries the other providers, at most 3 attempts.
+
+## D22. The explainer and alt reviewer are single structured calls, not runAgent runs (Phase 3)
+
+- **Context:** The spec says the explainer makes "one batched structured call (no tools)" and the alt reviewer "one vision call per image". runAgent is for tool-using loops (the Phase 5 fixer).
+- **Decision:** `structuredCall()` asks for `response_format: json_object`, describes the shape in the prompt, then parses and validates with zod. Invalid output gets one repair turn *on the same provider* with the zod errors. If the repair also fails, that counts as a provider failure and we fall back. JSON Schemas for prompts and tools are generated from zod (`z.toJSONSchema`).
+- **Alternatives:** `json_schema` strict mode (support varies across Gemini compat, Groq and OpenRouter free models). Forcing a `finish` tool call (works, but tool support on free models is patchier than JSON mode).
+- **Consequences:** Works on every provider in the chain. Each structured call costs 1 to 2 LLM calls per provider tried.
+
+## D23. Images reach the vision model by rendering them in the guarded browser (Phase 3)
+
+- **Context:** The spec fetches each image through the SSRF guard and resizes it to ≤ 512 px. `guardedFetch` returns text, there's no image library, and the fixture images are SVGs, which vision APIs reject.
+- **Decision:** `captureImage()` opens a page in the scan browser, adds an `<img>` (the URL is passed as an argument, never spliced into HTML), scales it to fit 512 px, and takes a JPEG screenshot of the element.
+- **Alternatives:** `sharp` (a native dependency and a second fetch path that would need its own SSRF handling). A binary `guardedFetch` (still needs a decoder and resizer).
+- **Consequences:** Every image request goes through route interception and the guard proxy, redirects included. Tested: the fixture SVG renders, a 404 and `169.254.169.254` both return null. Costs one browser launch per scan with candidates.
+
+## D24. Agent steps: in-memory trace, the report carries them, DB insert is ready for Phase 4 (Phase 3)
+
+- **Context:** "Every LLM call and tool call writes an agent_steps row", but `agent_steps.scan_id` is a foreign key, and the CLI creates no `scans` row (the worker starts writing reports in Phase 4).
+- **Decision:** A `TraceSink` collects `AgentStep` objects (agent_steps columns, camelCased, with big strings and base64 images clipped). The CLI and eval write them into `report.llm.steps`. `apps/worker/src/agentSteps.ts` has the row mapping, `insertAgentSteps()` and `countLlmCallsToday()`. With Supabase env set, the CLI counts today's LLM steps (per UTC day) for `DAILY_LLM_CALL_CAP`, and falls back to 0 with a warning if the count fails.
+- **Alternatives:** Have the CLI insert a fake `scans` row so it can write steps (it would pollute the queue table).
+- **Consequences:** Fallbacks and budget stops are visible today in the report and the CLI summary. **Phase 4** must insert steps after the scan's issues exist, and the worker should *fail closed* (skip LLM) if the daily count fails.
+
+## D25. Alt review runs before the explainer, and its findings re-rank issues (Phase 3)
+
+- **Decision:** Only `poor` and `should_be_decorative` verdicts become `a11y-alt-quality` findings (moderate, WCAG 1.1.1, the suggestion stored in `data`). Then `groupFindings` runs again, and one explainer call covers the final top 15.
+- **Consequences:** Explanations always match the final ranking. A scan with N candidates makes at most N + 1 successful calls (up to 9 by default), well under 25 even with repairs and one fallback.
+
+## D26. Model choices for the free tiers (Phase 3)
+
+- **Decision:** Gemini `gemini-3.8-flash` for text and vision. Groq `openai/gpt-oss-120b` for text only (Groq retired Llama 3.3 70B and Llama 4 Scout in 2026, and its vision options are preview-only). OpenRouter `google/gemma-4-31b-it:free` for both (accepts images and `response_format`). All set in env, nothing hardcoded.
+- **Consequences:** Without Gemini, vision falls back to OpenRouter only. Free OpenRouter models churn: re-check the list when a 404 shows up in the trace.
+
+## D27. `pnpm eval --llm`; with it, alt candidates no longer count toward recall (Phase 3, revisits D18)
+
+- **Decision:** `--llm` runs the same `enrichReport()` as `pnpm scan --llm`. In that mode `alt_candidate` evidence is dropped, so an `a11y-alt-quality` issue counts only through a reviewer finding. `ground_truth.json` gains six `alt_cases`, each with the verdicts that count as correct: three bad alts and three good ones. The good alts are never candidates, so the eval sends them to the reviewer directly. Those extra calls are reported apart from the per-scan cost.
+- **Alternatives:** Measure accuracy only on candidates (three cases, and it couldn't catch a reviewer that flags everything).
+- **Consequences:** `pnpm eval` without `--llm` stays free and deterministic. With it, the run fails if accuracy < 5/6 or calls > 25. Each run costs about 9 to 12 LLM calls.
+
+## D28. Two extra optional env vars and report fields (Phase 3)
+
+- `MAX_LLM_OUTPUT_TOKENS_PER_SCAN` (default 20,000, the spec's number) and `LLM_TIMEOUT_MS` (default 20,000), so limits stay in env.
+- `ScanReport` gains optional `issues[].explanation`, `altCandidates[].review`, `pages[].images` and `llm`. No DB schema change: these map to the existing `issues.title/explanation/who_is_affected/how_to_fix` columns in Phase 4.
+- **At 10x traffic:** about 10 calls per scan means the default `DAILY_LLM_CALL_CAP=1000` covers about 100 scans a day. Free-tier daily limits (per provider, per key) hit first. The remedy is a paid Gemini Flash tier, roughly a few cents per scan at these token counts, not more free providers.
+
+## D29. Turn reasoning off for a slow free model instead of raising the timeout (Phase 3)
+
+- **Context:** With OpenRouter as the only provider, the free Gemma models answered 429 on every attempt. `nvidia/nemotron-3.5-super-vl:free` works and reads images, but the explainer's single 15-issue call took 29 to 45+ s, past the spec's 20 s timeout. Raising `LLM_TIMEOUT_MS` to 45 s was tried and still timed out. Measured on an explainer-sized request: with reasoning on, 41 s and 5,050 output tokens (3,548 of them hidden reasoning); with it off, 11 s and 1,500 tokens, all 15 items valid.
+- **Decision:** Optional per-provider `<PROVIDER>_DISABLE_REASONING`. When true, the client adds OpenRouter's `reasoning: { enabled: false }` to that provider's requests. Set to true for OpenRouter in the local `.env`; `LLM_TIMEOUT_MS` stays at the spec's 20 s.
+- **Alternatives:** A 90 s timeout (slow, unpredictable, about 3x the output tokens per scan); splitting the explainer into smaller calls (more calls against the 25-call budget); a different free model (the JSON-and-vision ones were rate-limited or less accurate).
+- **Consequences:** Answers lose whatever the hidden reasoning added; the first explanations read fine, but this is what the "no invented facts" check should watch. The field is OpenRouter's format; another provider that rejected unknown fields would need its own variant, which is why it is off by default. At 10x traffic it saves roughly two-thirds of output tokens per scan on this model.
